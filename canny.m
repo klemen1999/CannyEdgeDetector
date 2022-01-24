@@ -1,7 +1,11 @@
-function [outImg] = canny(filename)
+function [imgGray, imgSuppressed, outImg] = canny(filename)
     originalImg = imread(filename);
     img = im2double(originalImg);
-    imgGray = im2gray(img); % convert to gray if not already
+    if size(img,3) > 1
+        imgGray = rgb2gray(img); % convert to grayscale
+    else
+        imgGray = img;
+    end
     dispImages = {imgGray}; % list of images to display
     titles = ["Input image"];
     
@@ -24,12 +28,16 @@ function [outImg] = canny(filename)
     %threshHigh = threshLow*2;
 
     % using Otsu for defining threshHigh
-    threshHigh = graythresh(img);
+    threshHigh = graythresh(imgGray);
     threshLow = threshHigh * 0.5;
-
+    
     outImg = hysteresisThresholding(imgSuppressed, threshLow, threshHigh);
     dispImages{end+1} = outImg;
     titles = [titles, "Final image"];
+    
+    outName = extractBetween(filename, 1, strlength(filename)-4);
+    outName = append(outName, "-out.png");
+    imwrite(outImg, outName);
 
     viz=1;
     if viz
@@ -41,7 +49,6 @@ function [outImg] = canny(filename)
             title(titles(i));
         end
         
-        %{
         figure(2);
         rgbImage = cat(3, imgGray, imgGray, imgGray);
         [h, w] = size(outImg);
@@ -52,11 +59,7 @@ function [outImg] = canny(filename)
                 end
             end
         end
-        subplot(1,2,1)
-        imshow(outImg);
-        subplot(1,2,2);
-        imshow(rgbImage,[0,1]);
-        %}
+        imshow(rgbImage,[0,1]); 
     end
 end
 
